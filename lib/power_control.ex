@@ -109,7 +109,7 @@ defmodule PowerControl do
   Extra information can be gathered by passing a keyword list of names to Linux cpufreq files:
 
   ```
-  iex> cpu_info(:cpu0, base_speed: base_frequency)
+  iex> cpu_info(:cpu0, base_speed: :base_frequency, speed: :scaling_cur_freq)
   %{max_speed: 1000000, min_speed: 700000, speed: 1000000, base_speed: 800000}
   ```
 
@@ -147,6 +147,25 @@ defmodule PowerControl do
   """
   def set_cpu_governor(cpu, governor) do
     CPU.set_governor(cpu, governor)
+  end
+
+  @doc """
+  Gets the governor for a CPU.
+
+  ```
+  iex> get_cpu_governor(:cpu0)
+  {:ok, :powersave}
+
+  iex> get_cpu_governor(:cpu0)
+  {:error, error}
+
+  # Running on non-nerves device or with bad governor file settings
+  iex> get_cpu_governor(:cpu0)
+  {:error, :governor_file_not_found}
+  ```
+  """
+  def get_cpu_governor(cpu) do
+    CPU.get_governor(cpu)
   end
 
   @doc """

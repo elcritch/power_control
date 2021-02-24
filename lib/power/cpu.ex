@@ -72,6 +72,21 @@ defmodule PowerControl.CPU do
   end
 
   @doc false
+  def get_governor(cpu) do
+    file_path = "#{cpu_dir()}#{cpu}/cpufreq/#{@governor_file_name}"
+
+    with {:file, true} <- {:file, File.exists?(file_path)},
+         {:ok, governor} <- File.read(file_path) do
+      {:ok, governor |> String.trim() |> String.to_atom()}
+    else
+      {:file, false} -> {:error, :governor_file_not_found}
+      {:error, reason} -> {:error, reason}
+      other -> {:error, other}
+    end
+  end
+
+  @spec set_governor(any, any) :: {:error, atom} | {:ok, any}
+  @doc false
   def set_governor(cpu, governor) do
     file_path = "#{cpu_dir()}#{cpu}/cpufreq/#{@governor_file_name}"
 
@@ -117,6 +132,9 @@ defmodule PowerControl.CPU do
            {value, _} <- Integer.parse(body) do
         {key, value}
       else
+        :error -> {key, nil}
+        {:error, :enoent} -> {key, :missing}
+        {:error, reason} -> {key, {:error, reason}}
         _ -> {key, nil}
       end
     end
