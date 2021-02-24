@@ -3,6 +3,7 @@ defmodule PowerControl.CPU do
   @default_cpu_dir "/sys/devices/system/cpu/"
   @governors_file_name "scaling_available_governors"
   @governor_file_name "scaling_governor"
+
   @info_files %{
     speed: :cpuinfo_cur_freq,
     max_speed: :cpuinfo_max_freq,
@@ -86,22 +87,30 @@ defmodule PowerControl.CPU do
     end
   end
 
-  @doc false
-  def cpu_info(cpu) do
+  @spec cpu_info(atom(), keyword(atom())) :: any
+  def cpu_info(cpu, extra_info) do
+    unless extra_info |> Keyword.keyword?(),
+      do: raise %ArgumentError{message: "extra_info must be keyword list"}
+
+    # Combine default list of files to check and custom overrides/extras
+    info =
+      @info_files
+      |> Map.merge(extra_info |> Map.new())
+
     case list_cpus() do
       {:ok, cpus} ->
         Enum.find(cpus, &(&1 == cpu))
-        |> parse_cpu_info()
+        |> parse_cpu_info(info)
 
       error ->
         error
     end
   end
 
-  defp parse_cpu_info(nil), do: {:error, :cpu_not_found}
+  defp parse_cpu_info(nil, _extra_info), do: {:error, :cpu_not_found}
 
-  defp parse_cpu_info(cpu) do
-    for {key, file} <- @info_files do
+  defp parse_cpu_info(cpu, info) do
+    for {key, file} <- info do
       info_path = "#{cpu_dir()}/#{cpu}/cpufreq/#{file}"
 
       with {:ok, body} <- File.read(info_path),

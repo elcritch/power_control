@@ -105,9 +105,17 @@ defmodule PowerControl do
   iex> cpu_info(:bad_cpu)
   {:error, :enoent}
   ```
+
+  Extra information can be gathered by passing a keyword list of names to Linux cpufreq files:
+
+  ```
+  iex> cpu_info(:cpu0, base_speed: base_frequency)
+  %{max_speed: 1000000, min_speed: 700000, speed: 1000000, base_speed: 800000}
+  ```
+
   """
-  def cpu_info(cpu) do
-    CPU.cpu_info(cpu)
+  def cpu_info(cpu, extra_info \\ []) do
+    CPU.cpu_info(cpu, extra_info)
   end
 
   @doc """
