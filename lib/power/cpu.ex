@@ -85,7 +85,6 @@ defmodule PowerControl.CPU do
     end
   end
 
-  @spec set_governor(any, any) :: {:error, atom} | {:ok, any}
   @doc false
   def set_governor(cpu, governor) do
     file_path = "#{cpu_dir()}#{cpu}/cpufreq/#{@governor_file_name}"
@@ -102,14 +101,6 @@ defmodule PowerControl.CPU do
     end
   end
 
-  def set_parameters(cpu, params) do
-    unless params |> Keyword.keyword?(),
-      do: raise %ArgumentError{message: "parameters must be keyword list"}
-
-    for {name, value} <- params, into: %{} do
-      {name, set_parameter(cpu, name, value)}
-    end
-  end
 
   def set_parameter(cpu, name, value) when is_atom(name) do
     file_path = "#{cpu_dir()}#{cpu}/cpufreq/#{name}"
@@ -118,7 +109,7 @@ defmodule PowerControl.CPU do
          :ok <- File.write(file_path, "#{value}") do
       :ok
     else
-      {:file, false} -> {:error, :governor_file_not_found}
+      {:file, false} -> {:error, :cpu_file_not_found}
       {:error, reason} -> {:error, reason}
     end
   end

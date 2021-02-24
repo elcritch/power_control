@@ -169,6 +169,30 @@ defmodule PowerControl do
   end
 
   @doc """
+  Sets a parameter for a CPU.
+
+  ```
+  iex> set_cpu_parameters(:cpu0, scaling_governor: :powersave, scaling_max_freq: 2_400_000)
+  %{scaling_governor: :ok, scaling_max_freq: :ok}
+
+  iex> set_cpu_parameters(:cpu0, scaling_max_freq: :invalid)
+  %{scaling_max_freq: {:error, :einval}}
+
+  # Running on non-nerves device or with incorrect parameter name
+  iex> set_cpu_parameters(:cpu0, bad_parameter: :some_value)
+  %{bad_parameter: {:error, :cpu_file_not_found}}
+  ```
+  """
+  def set_cpu_parameters(cpu, params) do
+    unless params |> Keyword.keyword?(),
+      do: raise %ArgumentError{message: "parameters must be keyword list"}
+
+    for {name, value} <- params, into: %{} do
+      {name, CPU.set_parameter(cpu, name, value)}
+    end
+  end
+
+  @doc """
   Lists system LEDS.
 
   ```
